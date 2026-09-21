@@ -110,8 +110,8 @@ export async function POST(
     .from("calculation_runs")
     .insert({
       calculation_id: calculation.id,
-      engine_plugin_id: definition.id?.startsWith("au.wind.") ? "au.openwind" : "unknown",
-      engine_plugin_version: "0.8.0",
+      engine_plugin_id: definition.plugin?.id || "unknown",
+      engine_plugin_version: definition.plugin?.version || "unknown",
       calculation_definition_id: calculationId,
       calculation_definition_version: definition.version || "1",
       standard_reference_json: definition.standard || null,
