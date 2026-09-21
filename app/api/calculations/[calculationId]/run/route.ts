@@ -2,6 +2,7 @@ import { createHash } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
+import { OPENCALCS_API_URL } from "@/lib/config";
 import type { Json } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -55,12 +56,7 @@ export async function POST(
     return NextResponse.json({ error: "Project not found." }, { status: 404 });
   }
 
-  const apiUrl = process.env.OPENCALCS_API_URL || process.env.NEXT_PUBLIC_OPENCALCS_API_URL;
-  if (!apiUrl) {
-    return NextResponse.json({ error: "OpenCalcs API is not configured." }, { status: 503 });
-  }
-
-  const baseUrl = apiUrl.replace(/\/$/, "");
+  const baseUrl = OPENCALCS_API_URL.replace(/\/$/, "");
   const [definitionResponse, runResponse] = await Promise.all([
     fetch(`${baseUrl}/api/calculations/${encodeURIComponent(calculationId)}`, {
       cache: "no-store",
