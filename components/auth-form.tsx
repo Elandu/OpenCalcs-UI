@@ -20,16 +20,6 @@ export function AuthForm({ mode }: { mode: Mode }) {
     event.preventDefault();
     setMessage("");
 
-    if (
-      !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-      !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-    ) {
-      setMessage(
-        "Supabase is not connected yet. Add the project URL and publishable key to .env.local.",
-      );
-      return;
-    }
-
     setBusy(true);
     const supabase = createClient();
 
