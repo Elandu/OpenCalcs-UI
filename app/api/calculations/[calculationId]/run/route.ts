@@ -1,8 +1,5 @@
-import { createHash } from "node:crypto";
-
 import { NextResponse } from "next/server";
 
-import { OPENCALCS_API_URL } from "@/lib/config";
 import type { Json } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -36,114 +33,29 @@ export async function POST(
 
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
-  const userId = claimsData?.claims?.sub;
 
-  if (!userId) {
+  if (!claimsData?.claims?.sub) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: project, error: projectError } = await supabase
-    .from("projects")
-    .select("id")
-    .eq("id", body.projectId)
-    .maybeSingle();
-
-  if (projectError) {
-    return NextResponse.json({ error: projectError.message }, { status: 500 });
-  }
-
-  if (!project) {
-    return NextResponse.json({ error: "Project not found." }, { status: 404 });
-  }
-
-  const baseUrl = OPENCALCS_API_URL.replace(/\/$/, "");
-  const [definitionResponse, runResponse] = await Promise.all([
-    fetch(`${baseUrl}/api/v1/calculations/${encodeURIComponent(calculationId)}`, {
-      cache: "no-store",
-    }),
-    fetch(`${baseUrl}/api/v1/calculations/${encodeURIComponent(calculationId)}/run`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ inputs: body.inputs }),
-      cache: "no-store",
-    }),
-  ]);
-
-  if (!definitionResponse.ok) {
-    return NextResponse.json({ error: "Calculation definition was not found." }, { status: 404 });
-  }
-
-  if (!runResponse.ok) {
-    let detail = "Calculation failed.";
-    try {
-      const payload = await runResponse.json();
-      detail = payload.detail || payload.error || detail;
-    } catch {
-      // Keep generic message if the backend response is not JSON.
-    }
-    return NextResponse.json({ error: detail }, { status: 422 });
-  }
-
-  const definition = await definitionResponse.json();
-  const result = await runResponse.json();
-
-  const { data: calculation, error: calculationError } = await supabase
-    .from("calculations")
-    .insert({
-      project_id: body.projectId,
-      calculation_definition_id: calculationId,
-      title: body.title.trim(),
-      created_by: userId,
-    })
-    .select("id")
-    .single();
-
-  if (calculationError || !calculation) {
-    return NextResponse.json(
-      { error: calculationError?.message || "Unable to save calculation." },
-      { status: 500 },
-    );
-  }
-
-  const inputHash = createHash("sha256")
-    .update(JSON.stringify(body.inputs))
-    .digest("hex");
-
-  const { data: run, error: runError } = await supabase
-    .from("calculation_runs")
-    .insert({
-      calculation_id: calculation.id,
-      engine_plugin_id: definition.plugin?.id || "unknown",
-      engine_plugin_version: definition.plugin?.version || "unknown",
-      calculation_definition_id: calculationId,
-      calculation_definition_version: definition.version || "1",
-      standard_reference_json: definition.standard || null,
-      input_json: body.inputs,
-      result_json: result,
-      warnings_json: [],
-      provenance_json: {
-        source: "opencalcs-api",
-        runtime: baseUrl,
+  const { data, error } = await supabase.functions.invoke(
+    "opencalcs-run-calculation",
+    {
+      body: {
+        projectId: body.projectId,
+        calculationId,
+        title: body.title.trim(),
+        inputs: body.inputs,
       },
-      input_hash: inputHash,
-      created_by: userId,
-    })
-    .select("id, created_at")
-    .single();
+    },
+  );
 
-  if (runError || !run) {
-    await supabase.from("calculations").delete().eq("id", calculation.id);
+  if (error || data?.error) {
     return NextResponse.json(
-      { error: runError?.message || "Unable to save calculation run." },
-      { status: 500 },
+      { error: error?.message || data?.error || "Calculation failed." },
+      { status: 422 },
     );
   }
 
-  return NextResponse.json({
-    calculationId: calculation.id,
-    runId: run.id,
-    createdAt: run.created_at,
-    definition,
-    result,
-  });
+  return NextResponse.json(data);
 }
