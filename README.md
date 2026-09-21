@@ -29,3 +29,14 @@ Do not put a Supabase secret/service-role key in any `NEXT_PUBLIC_` variable.
 ## Product boundary
 
 The UI owns the SaaS experience: identity, organisations, projects, saved calculation instances, review states and presentation. Calculation formulae remain in versioned engine packages behind the OpenCalcs runtime/API.
+
+
+## Supabase email confirmation
+
+For cookie-based SSR signup, configure the Supabase **Confirm signup** email template to link to:
+
+```text
+{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=email
+```
+
+Set the project's Site URL and allowed redirect URLs for each deployed environment before enabling production signups.
