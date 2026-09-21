@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { Brand } from "@/components/brand";
-import { CalculationLauncher } from "@/components/calculation-launcher";
+import { WindSiteWorkflow } from "@/components/wind-site-workflow";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -36,13 +36,25 @@ export default async function ProjectPage({
 
   const { data: calculations, error: calculationError } = await supabase
     .from("calculations")
-    .select("id, title, calculation_definition_id, state, updated_at")
+    .select("id, title, calculation_definition_id, state, sort_order, updated_at")
     .eq("project_id", project.id)
     .order("sort_order", { ascending: true })
     .order("updated_at", { ascending: false });
 
   if (calculationError) {
     throw new Error(`Unable to load calculations: ${calculationError.message}`);
+  }
+
+  const calculationIds = (calculations ?? []).map((calculation) => calculation.id);
+  const { data: links, error: linkError } = calculationIds.length
+    ? await supabase
+        .from("calculation_links")
+        .select("id, source_calculation_id, target_calculation_id")
+        .in("source_calculation_id", calculationIds)
+    : { data: [], error: null };
+
+  if (linkError) {
+    throw new Error(`Unable to load calculation graph: ${linkError.message}`);
   }
 
   return (
@@ -68,19 +80,22 @@ export default async function ProjectPage({
 
         <div className="project-meta-strip">
           <span>Status <b>{project.status}</b></span>
-          <span>Calculations <b>{calculations?.length ?? 0}</b></span>
+          <span>Calculation nodes <b>{calculations?.length ?? 0}</b></span>
+          <span>Links <b>{links?.length ?? 0}</b></span>
           <span>Standards region <b>{project.standards_region}</b></span>
         </div>
 
-        <div id="add-calculation">
-          <CalculationLauncher projectId={project.id} />
-        </div>
+        <WindSiteWorkflow
+          projectId={project.id}
+          projectNumber={project.project_number}
+          defaultAddress={project.address}
+        />
 
         <div className="project-list-card">
           <div className="project-list-header">
             <div>
-              <h2>Calculations</h2>
-              <p>Saved calculation instances for this project.</p>
+              <h2>Calculation graph</h2>
+              <p>Saved calculation nodes linked by their engineering input/output dependencies.</p>
             </div>
           </div>
 
@@ -91,7 +106,9 @@ export default async function ProjectPage({
                   <div>
                     <small>{calculation.calculation_definition_id}</small>
                     <h3>{calculation.title}</h3>
-                    <p>State: {calculation.state}</p>
+                    <p>
+                      Stage {calculation.sort_order + 1} · {calculation.calculation_definition_id}
+                    </p>
                   </div>
                   <div className="project-row-meta">
                     <span>{calculation.state}</span>
