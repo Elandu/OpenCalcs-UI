@@ -66,7 +66,7 @@ export default function Home() {
           <div className="product-window" aria-label="OpenCalcs application preview">
             <div className="window-bar">
               <span /><span /><span />
-              <div className="window-address">app.opencalcs.au / 24017 — Warehouse extension</div>
+              <div className="window-address">OpenCalcs / 24017 — Warehouse extension</div>
             </div>
             <div className="app-preview">
               <aside className="preview-sidebar">
@@ -243,7 +243,7 @@ export default function Home() {
           </div>
           <div className="cta-actions">
             <Link className="button button-light" href="/signup">Create a workspace</Link>
-            <a className="text-link" href="mailto:hello@opencalcs.au">Talk to us →</a>
+            <a className="text-link" href="#platform">Explore the platform →</a>
           </div>
         </div>
       </section>
