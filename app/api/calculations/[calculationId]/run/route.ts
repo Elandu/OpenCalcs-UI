@@ -58,10 +58,10 @@ export async function POST(
 
   const baseUrl = OPENCALCS_API_URL.replace(/\/$/, "");
   const [definitionResponse, runResponse] = await Promise.all([
-    fetch(`${baseUrl}/api/calculations/${encodeURIComponent(calculationId)}`, {
+    fetch(`${baseUrl}/api/v1/calculations/${encodeURIComponent(calculationId)}`, {
       cache: "no-store",
     }),
-    fetch(`${baseUrl}/api/calculations/${encodeURIComponent(calculationId)}/run`, {
+    fetch(`${baseUrl}/api/v1/calculations/${encodeURIComponent(calculationId)}/run`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ inputs: body.inputs }),
