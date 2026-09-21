@@ -2,6 +2,7 @@ import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 import { Brand } from "@/components/brand";
+import { CalculationLauncher } from "@/components/calculation-launcher";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -60,15 +61,19 @@ export default async function ProjectPage({
             <h1>{project.name}</h1>
             <p>{project.address || "No site address set"}</p>
           </div>
-          <button className="button button-primary" type="button">
+          <a className="button button-primary" href="#add-calculation">
             Add calculation
-          </button>
+          </a>
         </div>
 
         <div className="project-meta-strip">
           <span>Status <b>{project.status}</b></span>
           <span>Calculations <b>{calculations?.length ?? 0}</b></span>
           <span>Standards region <b>{project.standards_region}</b></span>
+        </div>
+
+        <div id="add-calculation">
+          <CalculationLauncher projectId={project.id} />
         </div>
 
         <div className="project-list-card">
