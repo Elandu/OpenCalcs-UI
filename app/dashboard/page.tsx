@@ -8,31 +8,6 @@ import { createClient } from "@/lib/supabase/server";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  if (
-    !process.env.NEXT_PUBLIC_SUPABASE_URL ||
-    !process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-  ) {
-    return (
-      <main className="dashboard-shell">
-        <header className="dashboard-header">
-          <Brand />
-          <span className="status-pill">Supabase setup required</span>
-        </header>
-        <section className="dashboard-empty">
-          <p className="eyebrow">OpenCalcs workspace</p>
-          <h1>Connect the OpenCalcs Supabase project.</h1>
-          <p>
-            Add NEXT_PUBLIC_SUPABASE_URL and NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
-            to the deployment environment.
-          </p>
-          <Link className="button button-primary" href="/">
-            Return home
-          </Link>
-        </section>
-      </main>
-    );
-  }
-
   const supabase = await createClient();
   const { data: claimsData } = await supabase.auth.getClaims();
 
