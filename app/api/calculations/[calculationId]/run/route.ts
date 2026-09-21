@@ -2,12 +2,13 @@ import { createHash } from "node:crypto";
 
 import { NextResponse } from "next/server";
 
+import type { Json } from "@/lib/database.types";
 import { createClient } from "@/lib/supabase/server";
 
 type RunRequest = {
   projectId?: string;
   title?: string;
-  inputs?: Record<string, unknown>;
+  inputs?: Json;
 };
 
 export const dynamic = "force-dynamic";
@@ -19,7 +20,13 @@ export async function POST(
   const { calculationId } = await context.params;
   const body = (await request.json()) as RunRequest;
 
-  if (!body.projectId || !body.title?.trim() || !body.inputs) {
+  if (
+    !body.projectId ||
+    !body.title?.trim() ||
+    !body.inputs ||
+    typeof body.inputs !== "object" ||
+    Array.isArray(body.inputs)
+  ) {
     return NextResponse.json(
       { error: "projectId, title and inputs are required." },
       { status: 400 },
