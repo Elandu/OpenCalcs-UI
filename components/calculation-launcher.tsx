@@ -64,6 +64,18 @@ export function CalculationLauncher({
         if (wind[0]) {
           setSelectedId(wind[0].id);
           setTitle(wind[0].name);
+          const nextValues: Record<string, string | boolean> = {};
+          for (const [key, schema] of Object.entries(wind[0].input_schema?.properties || {})) {
+            if (schema.type === "boolean") {
+              nextValues[key] =
+                typeof schema.default === "boolean" ? schema.default : true;
+            } else if (schema.default !== undefined) {
+              nextValues[key] = String(schema.default);
+            } else {
+              nextValues[key] = "";
+            }
+          }
+          setValues(nextValues);
         }
       })
       .catch((error: Error) => setMessage(error.message))
@@ -75,10 +87,12 @@ export function CalculationLauncher({
     [definitions, selectedId],
   );
 
-  useEffect(() => {
-    if (!selected) return;
+  function selectDefinition(nextId: string) {
+    const next = definitions.find((item) => item.id === nextId);
+    setSelectedId(nextId);
+    setTitle(next?.name || "");
     const nextValues: Record<string, string | boolean> = {};
-    for (const [key, schema] of Object.entries(selected.input_schema?.properties || {})) {
+    for (const [key, schema] of Object.entries(next?.input_schema?.properties || {})) {
       if (schema.type === "boolean") {
         nextValues[key] = typeof schema.default === "boolean" ? schema.default : true;
       } else if (schema.default !== undefined) {
@@ -88,9 +102,8 @@ export function CalculationLauncher({
       }
     }
     setValues(nextValues);
-    setTitle(selected.name);
     setMessage("");
-  }, [selected]);
+  }
 
   async function run(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -165,7 +178,7 @@ export function CalculationLauncher({
         <form className="calculator-form" onSubmit={run}>
           <label>
             Calculation
-            <select value={selectedId} onChange={(event) => setSelectedId(event.target.value)}>
+            <select value={selectedId} onChange={(event) => selectDefinition(event.target.value)}>
               {definitions.map((definition) => (
                 <option key={definition.id} value={definition.id}>
                   {definition.name}
