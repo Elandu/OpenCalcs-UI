@@ -98,9 +98,9 @@ export default async function DashboardPage() {
               Project data, linked calculations and issue history will stay together here.
             </p>
           </div>
-          <button className="button button-primary" type="button">
+          <Link className="button button-primary" href="/dashboard/projects/new">
             New project
-          </button>
+          </Link>
         </div>
 
         <div className="workspace-summary-grid">
