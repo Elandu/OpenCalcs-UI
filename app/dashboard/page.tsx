@@ -61,7 +61,10 @@ export default async function DashboardPage() {
     <main className="dashboard-shell">
       <header className="dashboard-header">
         <Brand />
-        <span className="status-pill">Engineering workspace</span>
+        <div className="dashboard-header-actions">
+          <Link href="/dashboard/settings/api-keys">API & MCP keys</Link>
+          <span className="status-pill">Engineering workspace</span>
+        </div>
       </header>
 
       <section className="dashboard-workspace">
