@@ -14,6 +14,79 @@ export type Database = {
   }
   public: {
     Tables: {
+      api_key_secrets: {
+        Row: {
+          api_key_id: string
+          created_at: string
+          key_hash: string
+        }
+        Insert: {
+          api_key_id: string
+          created_at?: string
+          key_hash: string
+        }
+        Update: {
+          api_key_id?: string
+          created_at?: string
+          key_hash?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_key_secrets_api_key_id_fkey"
+            columns: ["api_key_id"]
+            isOneToOne: true
+            referencedRelation: "api_keys"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      api_keys: {
+        Row: {
+          created_at: string
+          created_by: string
+          expires_at: string | null
+          id: string
+          key_prefix: string
+          last_used_at: string | null
+          name: string
+          organisation_id: string
+          revoked_at: string | null
+          scopes: string[]
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          expires_at?: string | null
+          id?: string
+          key_prefix: string
+          last_used_at?: string | null
+          name: string
+          organisation_id: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          expires_at?: string | null
+          id?: string
+          key_prefix?: string
+          last_used_at?: string | null
+          name?: string
+          organisation_id?: string
+          revoked_at?: string | null
+          scopes?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "api_keys_organisation_id_fkey"
+            columns: ["organisation_id"]
+            isOneToOne: false
+            referencedRelation: "organisations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       audit_events: {
         Row: {
           actor_user_id: string
