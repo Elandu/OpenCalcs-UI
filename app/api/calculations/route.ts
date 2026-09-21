@@ -13,7 +13,7 @@ export async function GET() {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const response = await fetch(`${OPENCALCS_API_URL.replace(/\/$/, "")}/api/calculations`, {
+  const response = await fetch(`${OPENCALCS_API_URL.replace(/\/$/, "")}/api/v1/calculations`, {
     cache: "no-store",
   });
 
