@@ -85,6 +85,38 @@ function numberValue(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? value : null;
 }
 
+function workflowVariable(
+  result: JsonObject,
+  variable: string,
+  direction?: string,
+) {
+  for (const item of array(result.variables)) {
+    const row = object(item);
+    if (row.variable !== variable) continue;
+    if (direction && row.direction !== direction) continue;
+    const value =
+      numberValue(row.final_value) ?? numberValue(row.recommended_value);
+    if (value !== null) return value;
+  }
+  return null;
+}
+
+function directionalWorkflowVariables(result: JsonObject, variable: string) {
+  return array(result.variables)
+    .map((item) => {
+      const row = object(item);
+      if (row.variable !== variable) return null;
+      const direction = stringValue(row.direction, "");
+      const value =
+        numberValue(row.final_value) ?? numberValue(row.recommended_value);
+      return direction && value !== null
+        ? `${direction} ${value.toFixed(3)}`
+        : null;
+    })
+    .filter((value): value is string => Boolean(value))
+    .join(" · ");
+}
+
 function stageSummary(stage: Stage): Array<[string, string]> {
   const result = object(stage.latestRun.result_json);
 
@@ -108,20 +140,26 @@ function stageSummary(stage: Stage): Array<[string, string]> {
   if (stage.stageKey === "wind_region") {
     const region = object(result.wind_region_assessment);
     const regional = object(result.regional_wind_speed_assessment);
-    const vr =
+    const calculatedVr =
       numberValue(regional.regional_wind_speed_mps) ??
       numberValue(regional.vr_mps);
+    const adoptedVr = workflowVariable(result, "VR");
+    const adoptedMd = directionalWorkflowVariables(result, "Md");
     return [
       ["Wind region", stringValue(region.wind_region)],
       ["Confidence", stringValue(region.confidence)],
-      ["Regional wind speed VR", vr !== null ? `${vr.toFixed(1)} m/s` : "—"],
+      [
+        "Calculated / adopted VR",
+        `${calculatedVr !== null ? calculatedVr.toFixed(1) : "—"} / ${adoptedVr !== null ? adoptedVr.toFixed(1) : "—"} m/s`,
+      ],
+      ["Adopted directional Md", adoptedMd || "—"],
     ];
   }
 
   if (stage.stageKey === "terrain") {
     const mzcat = array(result.mzcat_assessment);
     const directionsAssessed = array(result.directions);
-    const values = mzcat
+    const calculatedValues = mzcat
       .map((item) => {
         const row = object(item);
         const direction = stringValue(row.direction ?? row.wind_direction, "");
@@ -130,13 +168,17 @@ function stageSummary(stage: Stage): Array<[string, string]> {
           numberValue(row.recommended_value) ??
           numberValue(row.mzcat) ??
           numberValue(row.value);
-        return direction && value !== null ? `${direction} ${value.toFixed(3)}` : null;
+        return direction && value !== null
+          ? `${direction} ${value.toFixed(3)}`
+          : null;
       })
-      .filter(Boolean)
+      .filter((value): value is string => Boolean(value))
       .join(" · ");
+    const adoptedValues = directionalWorkflowVariables(result, "Mzcat");
     return [
       ["Directions assessed", String(directionsAssessed.length || mzcat.length || 0)],
-      ["Directional Mz,cat", values || "Review evidence"],
+      ["Calculated Mz,cat", calculatedValues || "Review evidence"],
+      ["Adopted Mz,cat", adoptedValues || calculatedValues || "Review evidence"],
       ["Warnings", String(array(result.warnings).length)],
     ];
   }
