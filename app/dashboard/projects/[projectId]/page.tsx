@@ -212,7 +212,7 @@ export default async function ProjectPage({
       (reviews ?? []).map((review) => [review.run_id, review]),
     );
 
-    workflowStages = currentCalculations
+    const resolvedStages = currentCalculations
       .map((calculation) => {
         const history = runRows
           .filter((run) => run.calculation_id === calculation.id)
@@ -230,7 +230,10 @@ export default async function ProjectPage({
               provenance_json: record(run.provenance_json),
               review: review
                 ? {
-                    status: review.status,
+                    status: review.status as
+                      | "pending"
+                      | "approved"
+                      | "changes_requested",
                     review_note: review.review_note,
                     reviewer_id: review.reviewer_id,
                     reviewed_at: review.reviewed_at,
@@ -259,9 +262,11 @@ export default async function ProjectPage({
           history,
         };
       })
-      .filter((stage): stage is NonNullable<typeof stage> => Boolean(stage));
+      .filter((stage) => stage !== null);
 
-    const designStage = workflowStages.find(
+    workflowStages = resolvedStages;
+
+    const designStage = resolvedStages.find(
       (stage) => stage.stageKey === "design",
     );
     baseInputs = record(designStage?.latestRun.input_json.workflow_inputs);
