@@ -183,6 +183,133 @@ export type Database = {
           },
         ]
       }
+      calculation_overrides: {
+        Row: {
+          applied_run_id: string | null
+          calculation_id: string
+          created_at: string
+          created_by: string
+          direction: string | null
+          id: string
+          is_active: boolean
+          original_value: number | null
+          override_value: number
+          reason: string
+          source_reference: string | null
+          source_run_id: string
+          superseded_at: string | null
+          superseded_by_id: string | null
+          variable: string
+          workflow_instance_id: string
+        }
+        Insert: {
+          applied_run_id?: string | null
+          calculation_id: string
+          created_at?: string
+          created_by: string
+          direction?: string | null
+          id?: string
+          is_active?: boolean
+          original_value?: number | null
+          override_value: number
+          reason: string
+          source_reference?: string | null
+          source_run_id: string
+          superseded_at?: string | null
+          superseded_by_id?: string | null
+          variable: string
+          workflow_instance_id: string
+        }
+        Update: {
+          applied_run_id?: string | null
+          calculation_id?: string
+          created_at?: string
+          created_by?: string
+          direction?: string | null
+          id?: string
+          is_active?: boolean
+          original_value?: number | null
+          override_value?: number
+          reason?: string
+          source_reference?: string | null
+          source_run_id?: string
+          superseded_at?: string | null
+          superseded_by_id?: string | null
+          variable?: string
+          workflow_instance_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculation_overrides_applied_run_id_fkey"
+            columns: ["applied_run_id"]
+            isOneToOne: false
+            referencedRelation: "calculation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calculation_overrides_calculation_id_fkey"
+            columns: ["calculation_id"]
+            isOneToOne: false
+            referencedRelation: "calculations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calculation_overrides_source_run_id_fkey"
+            columns: ["source_run_id"]
+            isOneToOne: false
+            referencedRelation: "calculation_runs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calculation_overrides_superseded_by_id_fkey"
+            columns: ["superseded_by_id"]
+            isOneToOne: false
+            referencedRelation: "calculation_overrides"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      calculation_run_reviews: {
+        Row: {
+          review_note: string | null
+          reviewed_at: string | null
+          reviewer_id: string | null
+          run_id: string
+          status: string
+          submitted_at: string
+          submitted_by: string
+          updated_at: string
+        }
+        Insert: {
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          run_id: string
+          status?: string
+          submitted_at?: string
+          submitted_by: string
+          updated_at?: string
+        }
+        Update: {
+          review_note?: string | null
+          reviewed_at?: string | null
+          reviewer_id?: string | null
+          run_id?: string
+          status?: string
+          submitted_at?: string
+          submitted_by?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calculation_run_reviews_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: true
+            referencedRelation: "calculation_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calculation_runs: {
         Row: {
           calculation_definition_id: string
@@ -195,8 +322,10 @@ export type Database = {
           id: string
           input_hash: string | null
           input_json: Json
+          parent_run_id: string | null
           provenance_json: Json
           result_json: Json
+          run_sequence: number
           standard_reference_json: Json | null
           warnings_json: Json
         }
@@ -211,8 +340,10 @@ export type Database = {
           id?: string
           input_hash?: string | null
           input_json: Json
+          parent_run_id?: string | null
           provenance_json?: Json
           result_json: Json
+          run_sequence?: number
           standard_reference_json?: Json | null
           warnings_json?: Json
         }
@@ -227,8 +358,10 @@ export type Database = {
           id?: string
           input_hash?: string | null
           input_json?: Json
+          parent_run_id?: string | null
           provenance_json?: Json
           result_json?: Json
+          run_sequence?: number
           standard_reference_json?: Json | null
           warnings_json?: Json
         }
@@ -238,6 +371,13 @@ export type Database = {
             columns: ["calculation_id"]
             isOneToOne: false
             referencedRelation: "calculations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "calculation_runs_parent_run_id_fkey"
+            columns: ["parent_run_id"]
+            isOneToOne: false
+            referencedRelation: "calculation_runs"
             referencedColumns: ["id"]
           },
         ]
@@ -250,9 +390,11 @@ export type Database = {
           id: string
           project_id: string
           sort_order: number
+          stage_key: string | null
           state: string
           title: string
           updated_at: string
+          workflow_instance_id: string | null
         }
         Insert: {
           calculation_definition_id: string
@@ -261,9 +403,11 @@ export type Database = {
           id?: string
           project_id: string
           sort_order?: number
+          stage_key?: string | null
           state?: string
           title: string
           updated_at?: string
+          workflow_instance_id?: string | null
         }
         Update: {
           calculation_definition_id?: string
@@ -272,9 +416,11 @@ export type Database = {
           id?: string
           project_id?: string
           sort_order?: number
+          stage_key?: string | null
           state?: string
           title?: string
           updated_at?: string
+          workflow_instance_id?: string | null
         }
         Relationships: [
           {
@@ -452,9 +598,16 @@ export type Database = {
           id: string
           issued_at: string
           issued_by: string
+          metadata_json: Json
           project_id: string
+          report_hash: string | null
           report_type: string
+          revision: number
+          status: string
           storage_path: string
+          supersedes_report_id: string | null
+          title: string | null
+          workflow_instance_id: string | null
         }
         Insert: {
           calculation_run_id?: string | null
@@ -462,9 +615,16 @@ export type Database = {
           id?: string
           issued_at?: string
           issued_by: string
+          metadata_json?: Json
           project_id: string
+          report_hash?: string | null
           report_type: string
+          revision?: number
+          status?: string
           storage_path: string
+          supersedes_report_id?: string | null
+          title?: string | null
+          workflow_instance_id?: string | null
         }
         Update: {
           calculation_run_id?: string | null
@@ -472,9 +632,16 @@ export type Database = {
           id?: string
           issued_at?: string
           issued_by?: string
+          metadata_json?: Json
           project_id?: string
+          report_hash?: string | null
           report_type?: string
+          revision?: number
+          status?: string
           storage_path?: string
+          supersedes_report_id?: string | null
+          title?: string | null
+          workflow_instance_id?: string | null
         }
         Relationships: [
           {
@@ -489,6 +656,13 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reports_supersedes_report_id_fkey"
+            columns: ["supersedes_report_id"]
+            isOneToOne: false
+            referencedRelation: "reports"
             referencedColumns: ["id"]
           },
         ]
